@@ -65,7 +65,9 @@ Theta2_grad = zeros(size(Theta2));
 % m = size(X,1) = number of training samples = 5k
 
 % convert y int labels into 10-dim vectors
-yvec = [[1:10] == y];   % size(yvec) = [5000 10]
+% octave-only version:
+% yvec = [[1:10] == y];   % size(yvec) = [5000 10]
+yvec = bsxfun(@eq,1:10,y);
 
 % add bias term to X  [5000 400]. Bias is the first columns
 a1 = [ones(m,1)  X];    % [ 5000 401]
@@ -81,25 +83,24 @@ z3 = Theta2 * a2;   % [10 5000]
 a3 = sigmoid(z3);   % [10 5000]
 
 % Loop over i (output neurons)
-J = 0;
 for i = 1:size(Theta2,1)
      yy = yvec(:, i);   % [5000 1]
      hh = a3(i, :);     % [1 5000]
-     J += ( -log(hh)*yy - log(1.0-hh)*(1.0-yy));
-endfor
+     J = J + ( -log(hh)*yy - log(1.0-hh)*(1.0-yy));
+end
 J = J / m;
 
 
 % Regularization
 tt1 = Theta1(:,2:end) .^ 2;   % [25 400]
 tt2 = Theta2(:,2:end) .^ 2;   % [10 25]
-J += (sum(tt1(:)) + sum(tt2(:))) * lambda / 2.0 / m;
+J = J + (sum(tt1(:)) + sum(tt2(:))) * lambda / 2.0 / m;
 
 
 % Gradient via backpropagation
 for t = 1:m
-   
-endfor
+   continue
+end
 
 % -------------------------------------------------------------
 
