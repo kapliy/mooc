@@ -67,7 +67,7 @@ Theta2_grad = zeros(size(Theta2));
 % convert y int labels into 10-dim vectors
 % octave-only version:
 % yvec = [[1:10] == y];   % size(yvec) = [5000 10]
-yvec = bsxfun(@eq,1:10,y);
+yvec = bsxfun(@eq,1:num_labels,y);
 
 % add bias term to X  [5000 400]. Bias is the first columns
 a1 = [ones(m,1)  X];    % [ 5000 401]
@@ -99,8 +99,19 @@ J = J + (sum(tt1(:)) + sum(tt2(:))) * lambda / 2.0 / m;
 
 % Gradient via backpropagation
 for t = 1:m
-   continue
+    sig3 = a3(:,t) - yvec(t,:)';   % [10 1]
+    sig2 = (Theta2' * sig3);  % [26 10] * [10 1] = [26 1]
+    % z2(:,t) = [25]
+    sig2 = sig2(2:end) .* sigmoidGradient(z2(:,t));   % [25 1]
+    % [25 400] + [25 1] * [1 401]
+    Theta1_grad(:,2:end) = Theta1_grad(:,2:end) + sig2*(a1(t,2:end));
+    % [10 26] + [10 1] * [1 25]
+    Theta2_grad(:,2:end) = Theta2_grad(:,2:end) + sig3*(a2(2:end,t)');
 end
+Theta1_grad = Theta1_grad ./ m;
+Theta2_grad = Theta2_grad ./ m;
+
+% TODO - debug why some dimensions are truncated above!
 
 % -------------------------------------------------------------
 
