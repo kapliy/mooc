@@ -104,14 +104,16 @@ for t = 1:m
     % z2(:,t) = [25]
     sig2 = sig2(2:end) .* sigmoidGradient(z2(:,t));   % [25 1]
     % [25 400] + [25 1] * [1 401]
-    Theta1_grad(:,2:end) = Theta1_grad(:,2:end) + sig2*(a1(t,2:end));
-    % [10 26] + [10 1] * [1 25]
-    Theta2_grad(:,2:end) = Theta2_grad(:,2:end) + sig3*(a2(2:end,t)');
+    Theta1_grad(:,1:end) = Theta1_grad(:,1:end) + sig2*(a1(t,1:end));
+    % [10 26] + [10 1] * [1 25]  % note: no bias term for output neuron
+    Theta2_grad(:,1:end) = Theta2_grad(:,1:end) + sig3*(a2(1:end,t)');
 end
 Theta1_grad = Theta1_grad ./ m;
 Theta2_grad = Theta2_grad ./ m;
 
-% TODO - debug why some dimensions are truncated above!
+% regularization term for the gradient
+Theta1_grad(:,2:end) = Theta1_grad(:,2:end) + lambda * 1.0 / m * Theta1(:, 2:end);
+Theta2_grad(:,2:end) = Theta2_grad(:,2:end) + lambda * 1.0 / m * Theta2(:, 2:end);
 
 % -------------------------------------------------------------
 
