@@ -101,7 +101,7 @@ pause;
 %  'thinks' that these words are the most likely indicators of spam.
 %
 
-% Sort the weights and obtin the vocabulary list
+% Sort the weights and obtain the vocabulary list
 [weight, idx] = sort(model.w, 'descend');
 vocabList = getVocabList();
 
