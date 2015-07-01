@@ -49,9 +49,8 @@ x = zeros(n, 1);
 %
 
 
-for i = 1:size(word_indices, 2)
-    elm = word_indices(i);
-    x(elm) = 1;
+for i = word_indices
+    x(i) = 1;
 end
 
 
