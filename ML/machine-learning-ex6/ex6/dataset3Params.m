@@ -23,11 +23,25 @@ sigma = 0.3;
 %        mean(double(predictions ~= yval))
 %
 
-
-
-
-
-
+Cs = [0.01 0.03 0.1 0.3 1.0 3.0 10.0 30.0];
+sigmas = [0.01 0.03 0.1 0.3 1.0 3.0 10.0 30.0];
+minV = Inf;  % mis-classification error
+minC = 0;
+minSigma = 0;
+for C=Cs
+    for sigma=sigmas
+        model = svmTrain(X, y, C, @(x1, x2) gaussianKernel(x1, x2, sigma));
+        predictions = svmPredict(model, Xval);
+        V = mean(double(predictions ~= yval));
+        if V <= minV
+            minV = V;
+            minC = C;
+            minSigma = sigma;
+        end
+    end
+end
+C = minC;
+sigma = minSigma;
 
 % =========================================================================
 
