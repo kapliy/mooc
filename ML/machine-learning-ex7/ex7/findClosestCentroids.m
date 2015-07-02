@@ -21,8 +21,22 @@ idx = zeros(size(X,1), 1);
 % Note: You can use a for-loop over the examples to compute this.
 %
 
+% idx = [300 1]
 
-
+for i=1:size(X,1)
+    ii = X(i,:);
+    min_dist = Inf;
+    min_c = Inf;
+    for c=1:K
+        cc = centroids(c,:);   % [6 2]
+        dist = norm(ii-cc);
+        if dist <= min_dist
+            min_dist = dist;
+            min_c = c;
+        end
+    end
+    idx(i) = min_c;
+end
 
 
 
