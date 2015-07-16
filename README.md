@@ -7,3 +7,5 @@ Notes and exercises from various massively-open-online-courses
 
 *Coursera*:
 * Stanford - Machine Learning
+* John Hopkins - Programming with R
+* John Hopkins - Practical Machine Learning
