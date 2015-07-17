@@ -1,5 +1,6 @@
 # solution for ex3
 source("http://d396qusza40orc.cloudfront.net/rprog%2Fscripts%2Fsubmitscript3.R")
+# rprog-030
 # nDPACmxzAF
 
 #outcome <- read.csv("outcome-of-care-measures.csv", colClasses='character')
@@ -19,3 +20,8 @@ source('rankhospital.R')
 stopifnot(rankhospital("TX", "heart failure", 4) == "DETAR HOSPITAL NAVARRO")
 stopifnot(rankhospital("MD", "heart attack", "worst") ==  "HARFORD MEMORIAL HOSPITAL")
 stopifnot(is.na(rankhospital("MN", "heart attack", 5000)))
+
+source('rankall.R')
+head(rankall("heart attack", 20), 10)
+tail(rankall("pneumonia", "worst"), 3)
+tail(rankall("heart failure"), 10)
