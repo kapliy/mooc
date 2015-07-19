@@ -1,0 +1,72 @@
+> predict(mod1, bench)
+Error: variables ‘kurtosis_roll_belt’, ‘kurtosis_picth_belt’, ‘kurtosis_yaw_belt’, ‘skewness_roll_belt’, ‘skewness_roll_belt.1’, ‘skewness_yaw_belt’, ‘max_roll_belt’, ‘max_picth_belt’, ‘max_yaw_belt’, ‘min_roll_belt’, ‘min_pitch_belt’, ‘min_yaw_belt’, ‘amplitude_roll_belt’, ‘amplitude_pitch_belt’, ‘amplitude_yaw_belt’, ‘var_total_accel_belt’, ‘avg_roll_belt’, ‘stddev_roll_belt’, ‘var_roll_belt’, ‘avg_pitch_belt’, ‘stddev_pitch_belt’, ‘var_pitch_belt’, ‘avg_yaw_belt’, ‘stddev_yaw_belt’, ‘var_yaw_belt’, ‘var_accel_arm’, ‘avg_roll_arm’, ‘stddev_roll_arm’, ‘var_roll_arm’, ‘avg_pitch_arm’, ‘stddev_pitch_arm’, ‘var_pitch_arm’, ‘avg_yaw_arm’, ‘stddev_yaw_arm’, ‘var_yaw_arm’, ‘kurtosis_roll_arm’, ‘kurtosis_picth_arm’, ‘kurtosis_yaw_arm’, ‘skewness_roll_arm’, ‘skewness_pitch_arm’, ‘skewness_yaw_arm’, ‘max_roll_arm’, ‘max_picth
+In addition: There were 33 warnings (use warnings() to see them)
+> warnings()
+Warning messages:
+1: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_roll_belt' is not a factor
+2: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_picth_belt' is not a factor
+3: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_yaw_belt' is not a factor
+4: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_roll_belt' is not a factor
+5: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_roll_belt.1' is not a factor
+6: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_yaw_belt' is not a factor
+7: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'max_yaw_belt' is not a factor
+8: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'min_yaw_belt' is not a factor
+9: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'amplitude_yaw_belt' is not a factor
+10: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_roll_arm' is not a factor
+11: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_picth_arm' is not a factor
+12: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_yaw_arm' is not a factor
+13: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_roll_arm' is not a factor
+14: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_pitch_arm' is not a factor
+15: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_yaw_arm' is not a factor
+16: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_roll_dumbbell' is not a factor
+17: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_picth_dumbbell' is not a factor
+18: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_yaw_dumbbell' is not a factor
+19: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_roll_dumbbell' is not a factor
+20: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_pitch_dumbbell' is not a factor
+21: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_yaw_dumbbell' is not a factor
+22: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'max_yaw_dumbbell' is not a factor
+23: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'min_yaw_dumbbell' is not a factor
+24: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'amplitude_yaw_dumbbell' is not a factor
+25: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_roll_forearm' is not a factor
+26: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_picth_forearm' is not a factor
+27: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'kurtosis_yaw_forearm' is not a factor
+28: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_roll_forearm' is not a factor
+29: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_pitch_forearm' is not a factor
+30: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'skewness_yaw_forearm' is not a factor
+31: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'max_yaw_forearm' is not a factor
+32: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'min_yaw_forearm' is not a factor
+33: In model.frame.default(Terms, newdata, na.action = na.action,  ... :
+  variable 'amplitude_yaw_forearm' is not a factor
+> 
