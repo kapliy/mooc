@@ -5,31 +5,60 @@ library('rattle')  # plotting of trees
 library(doParallel)
 registerDoParallel(cores=4)
 
-bench <- read.csv('pml-testing.csv')
-fdata <- read.csv('pml-training.csv')
+# load the data, interpreting certain strings as NaNs:
+nans <- c("NA", "", "#DIV/0!")
+pml_training <- read.csv('pml-training.csv', header=T, na.strings=nans)
+pml_testing <- read.csv('pml-testing.csv', header=T, na.strings=nans)
 
-#
-read.csv(..., colClasses=c(...,"character","numeric",...))
+# 1. filter out the columns where ALL values are NaNs
+cols_all <- colnames(pml_training)
+cols_allna <- cols_all[colSums(is.na(pml_training))==nrow(pml_training)]
+print(cat('Dropped', length(cols_allna), 'columns (only NA values):', cols_allna))
+cols <- cols_all[!(cols_all %in% cols_allna)]
 
-# load/save models
-#saveRDS(mod, file="mod.v1.rds")
-#mod = readRDS("mod.v1.rds")
+# 2. filter out columns with no variable (these provide little separation power between outcomes)
+nzv <- nearZeroVar(pml_training[, cols], saveMetrics = T, allowParallel=T)
+cols_novar <- cols[nzv[, 'zeroVar']]
+print(cat('Dropped', length(cols_novar), 'columns (zero variance):', cols_novar))
+cols <- cols[!(cols %in% cols_novar)]
 
-# split full dataset (fdata) into train/val/test using 60-20-20 fractions
+# 3. drop bad columns from both the training and testing (aka benchmark) datasets
+ftrain <- pml_training[, colnames(pml_training) %in% cols]
+fbench <- pml_testing[, colnames(pml_testing) %in% c(cols, 'problem_id')]
+
+# 4. separate numeric and factor columns (for later use)
+cols_numeric_bool <- sapply(cols, function(col){is.numeric(pml_training[,col])})
+cols_numeric <- cols[cols_numeric_bool == T]
+cols_factor <- cols[-cols_numeric_bool == F]
+
+########### Visualization ##############
+# dependent variables
+qplot(ftrain$classe, geom="histogram", main='Distribution of dependent variable', xlab='classe', ylab='Counts')
+
+# Use PCA analysis to extract highest-variance predictors so that we can visualize them
+df_pca <- preProcess(ftrain[, cols_numeric], method="pca",thresh=0.99)
+# TODO - consider applying PCA: reduce down to 75 vars!
+
+# split full dataset (ftrain) into train/val/test using 60-20-20 fractions
 set.seed(1)
-p6 <- createDataPartition(fdata$classe, p=0.6, list=F)
-train <- fdata[p6, ]  # 60%
-tv <- fdata[-p6, ]    # 40%
+p6 <- createDataPartition(ftrain$classe, p=0.6, list=F)
+train <- ftrain[p6, ]  # 60%
+tv <- ftrain[-p6, ]    # 40%
 p5 <- createDataPartition(tv$classe, p=0.5, list=F)
 val <- tv[p5, ]       # 0.5*40% = 20%
 test <- tv[-p5, ]     # 0.5*40% = 20%
+
+
+# add pre-processing:
+# preProcess=c("center", "scale") 
 
 get_model_01 <- function(save_mode = F) {
     # random forest
     name <- 'model.v01.rf.all.rds'
     if (save_mode == T) {
         set.seed(1)
-        mod <- train(classe~., data=train, method='rf')
+        mod <- train(classe~., data=train, method='rf',
+                     trControl = trainControl(method = "oob"))
         saveRDS(mod, name)
     } else {
         mod <- readRDS(name)
@@ -55,13 +84,21 @@ get_model_03 <- function(save_mode = F) {
     name <- 'model.v03.gbm.all.rds'
     if (save_mode == T) {
         set.seed(1)
-        mod <- train(classe~., data=train, method='gbm')
+        mod <- train(classe~., data=train, method='gbm',
+                     trControl = trainControl(method = "cv", number=5))
         saveRDS(mod, name)
     } else {
         mod <- readRDS(name)
     }
     mod
 }
+
+train_all_models <- function() {
+    get_model_01(save_mode=T)
+    get_model_02(save_mode=T)
+    get_model_03(save_mode=T)
+}
+
 
 combine_models <- function() {
     # train combiner
@@ -97,6 +134,7 @@ mod1 <- get_model_01()
 mod2 <- get_model_02()
 mod3 <- get_model_03()
 
+fancyRpartPlot(mod2$finalModel)
 
 # evaluate
 
