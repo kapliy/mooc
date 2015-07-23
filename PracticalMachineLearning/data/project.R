@@ -1,25 +1,36 @@
+##############################################
+# LIBRARIES
+##############################################
+
 library('caret')   # learning
 library('rattle')  # plotting of trees
-
 # parallel computing to utilize multiple cores
 library(doParallel)
-registerDoParallel(cores=4)
+registerDoParallel(cores=2)
 
-# load the data, interpreting certain strings as NaNs:
+##############################################
+# DATA LOAD AND PRE-PROCESSING
+##############################################
+
+# 0. load the data, interpreting certain values as NaNs:
 nans <- c("NA", "", "#DIV/0!")
 pml_training <- read.csv('pml-training.csv', header=T, na.strings=nans)
 pml_testing <- read.csv('pml-testing.csv', header=T, na.strings=nans)
 
-# 1. filter out the columns where ALL values are NaNs
+# 1. A. drop irrelevant columns, such as event metadata, username, and various timestamps
+#    B. filter out the columns where ALL values are NaNs
 cols_all <- colnames(pml_training)
-cols_allna <- cols_all[colSums(is.na(pml_training))==nrow(pml_training)]
-print(cat('Dropped', length(cols_allna), 'columns (only NA values):', cols_allna))
-cols <- cols_all[!(cols_all %in% cols_allna)]
+cols_drop = c('X', 'new_window', 'num_window', 'user_name',
+              'raw_timestamp_part_1', 'raw_timestamp_part_2', 'cvtd_timestamp')
+print(cat('Dropped', length(cols_drop), 'columns (reason: irrelevant metadata):', cols_drop))
+cols_hasna <- cols_all[colSums(is.na(pml_training))>0]
+print(cat('Dropped', length(cols_hasna), 'columns (reason: NA values):', cols_hasna))
+cols <- cols_all[!(cols_all %in% c(cols_drop,cols_hasna))]
 
-# 2. filter out columns with no variable (these provide little separation power between outcomes)
+# 2. filter out columns with no variability (these provide little separation power between outcomes)
 nzv <- nearZeroVar(pml_training[, cols], saveMetrics = T, allowParallel=T)
 cols_novar <- cols[nzv[, 'zeroVar']]
-print(cat('Dropped', length(cols_novar), 'columns (zero variance):', cols_novar))
+print(cat('Dropped', length(cols_novar), 'columns (reason: zero variance):', cols_novar))
 cols <- cols[!(cols %in% cols_novar)]
 
 # 3. drop bad columns from both the training and testing (aka benchmark) datasets
@@ -27,16 +38,20 @@ ftrain <- pml_training[, colnames(pml_training) %in% cols]
 fbench <- pml_testing[, colnames(pml_testing) %in% c(cols, 'problem_id')]
 
 # 4. separate numeric and factor columns (for later use)
-cols_numeric_bool <- sapply(cols, function(col){is.numeric(pml_training[,col])})
+cols_numeric_bool <- sapply(cols, function(col){is.numeric(ftrain[,col])})
 cols_numeric <- cols[cols_numeric_bool == T]
 cols_factor <- cols[-cols_numeric_bool == F]
 
-########### Visualization ##############
-# dependent variables
+
+##############################################
+# DATA VISUALIZATION
+##############################################
+
+# 1. Distribution of dependent variables
 qplot(ftrain$classe, geom="histogram", main='Distribution of dependent variable', xlab='classe', ylab='Counts')
 
 # Use PCA analysis to extract highest-variance predictors so that we can visualize them
-df_pca <- preProcess(ftrain[, cols_numeric], method="pca",thresh=0.99)
+# df_pca <- preProcess(ftrain[, cols_numeric], method="pca",thresh=0.99)
 # TODO - consider applying PCA: reduce down to 75 vars!
 
 # split full dataset (ftrain) into train/val/test using 60-20-20 fractions
@@ -49,16 +64,13 @@ val <- tv[p5, ]       # 0.5*40% = 20%
 test <- tv[-p5, ]     # 0.5*40% = 20%
 
 
-# add pre-processing:
-# preProcess=c("center", "scale") 
-
 get_model_01 <- function(save_mode = F) {
     # random forest
     name <- 'model.v01.rf.all.rds'
     if (save_mode == T) {
         set.seed(1)
-        mod <- train(classe~., data=train, method='rf',
-                     trControl = trainControl(method = "oob"))
+        mod <- train(classe~., data=train, method='rf', # preProcess=c("center", "scale", "pca"),
+                     allowParallel=T, trControl = trainControl(method = "cv", number=10))
         saveRDS(mod, name)
     } else {
         mod <- readRDS(name)
@@ -71,11 +83,13 @@ get_model_02 <- function(save_mode = F) {
     name <- 'model.v02.rpart.all.rds'
     if (save_mode == T) {
         set.seed(1)
-        mod <- train(classe~., data=train, method='rpart')
+        mod <- train(classe~., data=train, method='rpart', # preProcess=c("center", "scale", "pca"),
+                     allowParallel=T)
         saveRDS(mod, name)
     } else {
         mod <- readRDS(name)
     }
+    #fancyRpartPlot(mod$finalModel)
     mod
 }
 
@@ -84,8 +98,8 @@ get_model_03 <- function(save_mode = F) {
     name <- 'model.v03.gbm.all.rds'
     if (save_mode == T) {
         set.seed(1)
-        mod <- train(classe~., data=train, method='gbm',
-                     trControl = trainControl(method = "cv", number=5))
+        mod <- train(classe~., data=train, method='gbm', # preProcess=c("center", "scale", "pca"),
+                     allowParallel=T, trControl = trainControl(method = "cv", number=5))
         saveRDS(mod, name)
     } else {
         mod <- readRDS(name)
@@ -130,11 +144,17 @@ get_accuracy <- function() {
     
 }
 
-mod1 <- get_model_01()
-mod2 <- get_model_02()
-mod3 <- get_model_03()
+# train_all_models()
 
-fancyRpartPlot(mod2$finalModel)
+mod1 <- get_model_01()
+
+
+# Out-of-sample error
+confusionMatrix(predict(mod1, val), val$classe)
+
+# Prediction
+pred <- predict(mod1, newdata=fbench)
+print(pred)
 
 # evaluate
 
