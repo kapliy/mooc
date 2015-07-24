@@ -1,5 +1,6 @@
 ##############################################
 # LIBRARIES
+# First, let's load all required libraries
 ##############################################
 
 library('caret')     # learning
@@ -11,6 +12,10 @@ registerDoParallel(cores=4)
 
 ##############################################
 # DATA LOAD AND PRE-PROCESSING
+# here, we load the dataset (both training and 20-sample testing)
+# from csv files and drop about half of the columns
+# (either because they are metadata unrelated to sensor measurements,
+#  or because they contain NaNs)
 ##############################################
 
 # 0. load the data, interpreting certain values as NaNs:
@@ -40,17 +45,18 @@ df_bench <- pml_testing[, colnames(pml_testing) %in% c(cols, 'problem_id')]
 
 ##############################################
 # DATA VISUALIZATION
+# we plot the distribution of dependent variable "classe" 
+# (to confirm that we can see all 5 cases in the dataset)
 ##############################################
 
-# 1. Distribution of dependent variables
 qplot(df$classe, geom="histogram", main='Distribution of dependent variable', xlab='classe', ylab='Counts')
-
-# Use PCA analysis to extract highest-variance predictors so that we can visualize them
-# df_pca <- preProcess(ftrain[, cols_numeric], method="pca",thresh=0.99)
-# TODO - consider applying PCA: reduce down to 75 vars!
 
 ##############################################
 # SPLIT DATASET INTO TRAINING/VALIDATION/TESTING
+# We use:
+# 60% - for training to train 3 models
+# 20% for cross-validation - to choose the best model
+# 20% for final accuracy measurement - using our best model chosen via cross-validation
 ##############################################
 
 # split full dataset (ftrain) into train/val/test using 60-20-20 fractions
@@ -63,10 +69,14 @@ df_val <- tmp[p5, ]       # 0.5*40% = 20%
 df_test <- tmp[-p5, ]     # 0.5*40% = 20%
 
 ##############################################
-# TRAIN SEVERAL MODELS ON TRAINING SET
-# NOTE: because training is slow, we create functions
-#       that can cache and quickly retrieved a trained
+# TRAIN 3 MODELS ON TRAINING SET
+# NOTE: because training is slow (~30 minutes), we create 3 functions
+#       that can cache and quickly retrieve a trained
 #       model from a .rds file on disk
+# The models we train are:
+# 1. random forest ("rf") without pre-processing
+# 2. random forest ("rf") with center-scale-PCA preprocessing pipeline
+# 3. gradient-boosted decision tree ("gbm")
 ##############################################
 
 # 1. rf (random forest) without extra pre-processing
@@ -111,7 +121,7 @@ get_mod3 <- function(save_mode = F) {
     mod
 }
 
-# 5. function to train and save all models to disk
+# 4. this function can be used to train and save all 3 models to disk
 train_all_models <- function() {
     get_mod3(save_mode=T)
     get_mod2(save_mode=T)
@@ -120,16 +130,21 @@ train_all_models <- function() {
 
 
 ##############################################
-# CHOOSE THE BEST MODEL USING VALIDATION DATASET
+# TRAIN 3 MODELS AND CHOOSE THE BEST MODEL USING VALIDATION DATASET
+# Basically, we train the 3 models and apply them to validation dataset
+# We then evaluate accuracy on all 3 models and choose the best one
+# (the one with the highest accuracy)
 ##############################################
-# this line can be commented out if the models have already been trained
-# (they can then be loaded from .rds files)
+
+# the line below can be commented out if the models have already been trained
+# (and saved inside rds files)
+# WARNING: training the models is slow and can take 30-60 minutes!!!
 # train_all_models()
 
-# load models from .rds files
-mod1 <- get_mod1()
-mod2 <- get_mod2()
-mod3 <- get_mod3()
+# load models from the .rds files
+mod1 <- get_mod1(save_mode=F)
+mod2 <- get_mod2(save_mode=F)
+mod3 <- get_mod3(save_mode=F)
 
 # computes prediction accuracy on model "mod" using test data "df"
 accuracy <- function(mod, df) {
@@ -137,17 +152,19 @@ accuracy <- function(mod, df) {
     res
 }
 
-
+# print accuracy for all 3 models using the validation dataset
 print(paste("Model 1 validation accuracy", accuracy(mod1, df_val)))
 print(paste("Model 2 validation accuracy", accuracy(mod2, df_val)))
 print(paste("Model 3 validation accuracy", accuracy(mod3, df_val)))
 
-# We see that model1 has the best accuracy on the validation set.
-# Therefore, we will select it to evaluate accuracy on the test set
+# We saw that modell "mod1" has the best accuracy on the validation set.
+# Therefore, we select it as the "final" model that will be used
+# to evaluate accuracy on the test set
 mod <- mod1
 
 ##############################################
 # EVALUATE ACCURACY ON TEST DATASET
+# this is the final accuracy that we report for the assignment
 ##############################################
 
 # note that we are using the best model (chosen via the validation dataset)
@@ -156,8 +173,14 @@ print(paste("Final accuracy on test set", accuracy(mod, df_test)))
 # Full details from the confusion matrix:
 confusionMatrix(predict(mod, df_test), df_test$classe)
 
+# FINAL ACCURACY = 99.39% - not bad!
+
 ##############################################
 # PREDICT 20 BENCHMARK CASES
+# Here, we apply the final model to 20 test cases in the assignment
+# and generate text files that can be used to submit them for grading
+# on the Coursera website
+# All 20 cases passed Coursera's grader with 100% accuracy.
 ##############################################
 pred <- predict(mod, newdata=df_bench)
 print(pred)
@@ -172,5 +195,5 @@ pml_write_files = function(x){
 }
 setwd('results')
 pml_write_files(pred)
+setwd('../')
 
-# Note: all 20 cases passed Coursera's grader with 100% accuracy.
