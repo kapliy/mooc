@@ -2,12 +2,12 @@
 # LIBRARIES
 ##############################################
 
-library('caret')   # learning
-library('rattle')  # plotting of trees
-library('forecast')
+library('caret')     # learning
+library('rattle')    # plotting of trees
+library('knitr')     # HTML reports
 # parallel computing to utilize multiple cores
-#library(doParallel)
-#registerDoParallel(cores=2)
+library(doParallel)
+registerDoParallel(cores=4)
 
 ##############################################
 # DATA LOAD AND PRE-PROCESSING
@@ -122,33 +122,53 @@ train_all_models <- function() {
 ##############################################
 # CHOOSE THE BEST MODEL USING VALIDATION DATASET
 ##############################################
+# this line can be commented out if the models have already been trained
+# (they can then be loaded from .rds files)
 # train_all_models()
 
+# load models from .rds files
 mod1 <- get_mod1()
 mod2 <- get_mod2()
 mod3 <- get_mod3()
 
+# computes prediction accuracy on model "mod" using test data "df"
+accuracy <- function(mod, df) {
+    res <- sum(predict(mod, df) == df$classe) / length(df$classe)
+    res
+}
 
-accuracy(predict(mod1, df_val), df_val$classe)
 
-## collect resamples
-## results <- resamples(list(LVQ=modelLvq, GBM=modelGbm, SVM=modelSvm))
+print(paste("Model 1 validation accuracy", accuracy(mod1, df_val)))
+print(paste("Model 2 validation accuracy", accuracy(mod2, df_val)))
+print(paste("Model 3 validation accuracy", accuracy(mod3, df_val)))
 
+# We see that model1 has the best accuracy on the validation set.
+# Therefore, we will select it to evaluate accuracy on the test set
+mod <- mod1
 
 ##############################################
 # EVALUATE ACCURACY ON TEST DATASET
 ##############################################
-# train_all_models()
 
-mod1 <- get_model_01()
+# note that we are using the best model (chosen via the validation dataset)
+print(paste("Final accuracy on test set", accuracy(mod, df_test)))
 
-
-# Out-of-sample error
-confusionMatrix(predict(mod1, val), val$classe)
+# Full details from the confusion matrix:
+confusionMatrix(predict(mod, df_test), df_test$classe)
 
 ##############################################
 # PREDICT 20 BENCHMARK CASES
 ##############################################
-pred <- predict(mod1, newdata=df_bench)
+pred <- predict(mod, newdata=df_bench)
 print(pred)
 
+# dump assignment submission files in a subfolder
+pml_write_files = function(x){
+    n = length(x)
+    for(i in 1:n){
+        filename = paste0("problem_id_",i,".txt")
+        write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+    }
+}
+setwd('results')
+pml_write_files(pred)
